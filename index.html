@@ -828,10 +828,23 @@
       tooltip.classList.toggle('locked', !!lockedNode);
       tooltip.style.display = 'block';
       const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
-      let tx = sx + 16, ty = sy - th / 2;
-      if (tx + tw > window.innerWidth - 20) tx = sx - tw - 16;
-      if (ty < 10) ty = 10;
-      if (ty + th > window.innerHeight - 10) ty = window.innerHeight - th - 10;
+      const mobile = isMobile();
+      let tx, ty;
+      if (mobile) {
+        // Center horizontally, show above or below node
+        tx = Math.max(8, Math.min(W - tw - 8, sx - tw / 2));
+        if (sy > H / 2) {
+          ty = sy - th - 24; // above
+        } else {
+          ty = sy + 24; // below
+        }
+        ty = Math.max(8, Math.min(H - th - 8, ty));
+      } else {
+        tx = sx + 16; ty = sy - th / 2;
+        if (tx + tw > W - 20) tx = sx - tw - 16;
+        if (ty < 10) ty = 10;
+        if (ty + th > H - 10) ty = H - th - 10;
+      }
       tooltip.style.left = tx + 'px'; tooltip.style.top = ty + 'px';
     }
 
