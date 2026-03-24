@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>积分兑换价值分析 — Points Redemption Value</title>
+  <meta name="description" content="Interactive credit card points redemption value analysis — find the best transfer partner for your points">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    :root {
+      --bg: #0a0a1a; --surface: rgba(18,18,38,0.9); --border: rgba(255,255,255,0.06);
+      --text: #e0e0e0; --dim: #666;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(16,185,129,0.04) 0%, transparent 50%);
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px 80px; }
+    .nav-link {
+      display: inline-flex; gap: 6px; margin-bottom: 24px; padding: 5px 12px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 8px; color: #888; text-decoration: none; font-size: 11px;
+      transition: all 0.2s;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.08); color: #ccc; }
+
+    header { text-align: center; margin-bottom: 36px; }
+    header h1 {
+      font-size: 24px; font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    header p { font-size: 13px; color: var(--dim); margin-top: 4px; }
+
+    /* Section */
+    .section { margin-bottom: 40px; }
+    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    /* Portal Table */
+    .portal-table-wrap { overflow-x: auto; }
+    .portal-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      background: var(--surface); border-radius: 12px; overflow: hidden;
+    }
+    .portal-table th, .portal-table td { padding: 12px 14px; text-align: center; }
+    .portal-table thead th {
+      background: rgba(255,255,255,0.03); font-size: 11px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.5px; color: var(--dim);
+      border-bottom: 1px solid var(--border);
+    }
+    .portal-table thead th:first-child { text-align: left; }
+    .portal-table tbody td { border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .portal-table tbody td:first-child { text-align: left; font-weight: 500; }
+    .portal-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .card-dot-sm { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .cpp-val { font-weight: 600; }
+    .cpp-best { color: #10b981; background: rgba(16,185,129,0.08); padding: 3px 8px; border-radius: 6px; }
+    .cpp-na { color: #444; }
+    .earn-sub { font-size: 10px; color: var(--dim); display: block; margin-top: 2px; }
+
+    /* Destination Picker */
+    .picker-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px;
+    }
+    .picker-tabs {
+      display: flex; gap: 4px; padding: 3px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; width: fit-content;
+    }
+    .picker-tab {
+      padding: 7px 18px; border: none; background: none; color: var(--dim);
+      font-family: 'Inter'; font-size: 12px; font-weight: 500; border-radius: 8px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .picker-tab:hover { color: #ccc; }
+    .picker-tab.active { background: rgba(255,255,255,0.08); color: #fff; }
+    .dest-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px; margin-bottom: 24px;
+    }
+    .dest-btn {
+      padding: 10px 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+      border-radius: 10px; color: var(--text); font-family: 'Inter'; font-size: 12px;
+      cursor: pointer; transition: all 0.2s; text-align: left;
+    }
+    .dest-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+    .dest-btn.selected { background: rgba(167,139,250,0.12); border-color: #a78bfa; color: #fff; }
+    .dest-btn .code { font-weight: 700; font-size: 14px; margin-right: 6px; }
+    .dest-btn .name { color: var(--dim); font-size: 11px; display: block; margin-top: 2px; }
+
+    /* Result panel */
+    .result-panel {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; min-height: 120px;
+    }
+    .result-empty { text-align: center; color: #444; padding: 40px 0; font-size: 14px; }
+    .result-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .result-sub { font-size: 12px; color: var(--dim); margin-bottom: 20px; }
+    .transfer-cards {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+    }
+    .transfer-card {
+      padding: 16px; border-radius: 12px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02); position: relative;
+      transition: transform 0.2s;
+    }
+    .transfer-card:hover { transform: translateY(-2px); }
+    .transfer-card.best {
+      border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05);
+    }
+    .transfer-card .badge {
+      position: absolute; top: -8px; right: 12px;
+      padding: 2px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
+      background: #10b981; color: #000;
+    }
+    .transfer-card .card-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .transfer-card .ratio { font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+    .transfer-card .value-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04); }
+    .transfer-card .value-big { font-size: 24px; font-weight: 800; }
+    .transfer-card .value-unit { font-size: 11px; color: var(--dim); }
+    .transfer-card .value-calc { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+    footer {
+      text-align: center; padding: 28px 0; font-size: 11px; color: #333;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: #555; text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .container { padding: 16px 12px 60px; }
+      header h1 { font-size: 18px; }
+      header p { font-size: 11px; }
+      .section-title { font-size: 14px; }
+      .portal-table { font-size: 11px; }
+      .portal-table th, .portal-table td { padding: 8px 6px; }
+      .picker-wrap { padding: 14px; }
+      .picker-tab { padding: 6px 14px; font-size: 11px; }
+      .dest-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .dest-btn { padding: 8px 10px; font-size: 11px; }
+      .dest-btn .code { font-size: 12px; }
+      .dest-btn .name { font-size: 10px; }
+      .result-panel { padding: 14px; }
+      .result-title { font-size: 15px; }
+      .result-sub { font-size: 11px; }
+      .transfer-cards { grid-template-columns: 1fr; }
+      .transfer-card { padding: 14px; }
+      .transfer-card .card-name { font-size: 13px; }
+      .transfer-card .value-big { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="nav-link">← 返回转点二分图</a>
+
+    <header>
+      <h1>💎 积分兑换价值分析</h1>
+      <p>选择目标航司或酒店 → 查看哪个积分计划转点最划算</p>
+    </header>
+
+    <!-- Section 1: Portal CPP Comparison -->
+    <div class="section">
+      <div class="section-title">📊 Portal 固定兑换值 & 有效回报率</div>
+      <div class="portal-table-wrap" id="portalTableWrap"></div>
+    </div>
+
+    <!-- Section 2: Interactive Picker -->
+    <div class="section">
+      <div class="section-title">🎯 选择目标 — 找出最佳转点路径</div>
+      <div class="picker-wrap">
+        <div class="picker-tabs">
+          <button class="picker-tab active" data-pick="airlines">✈️ 航空公司</button>
+          <button class="picker-tab" data-pick="hotels">🏨 酒店</button>
+        </div>
+        <div id="destGrid" class="dest-grid"></div>
+        <div id="resultPanel" class="result-panel">
+          <div class="result-empty">👆 选择一个航空公司或酒店，查看最佳转点方案</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      数据来源: TPG, NerdWallet, FrequentMiler · 2026.3 · <a href="index.html">转点二分图</a> · <a href="references.html">📚 数据来源</a>
+    </footer>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════
+    //  DATA
+    // ═══════════════════════════════════════════════════
+
+    const CARDS = [
+      {
+        id:'UR', name:'Chase UR', color:'#3b82f6', fee:'$795 (CSR)',
+        portal: { flights: 1.5, hotels: 1.5, note: 'Points Boost 浮动' },
+        earn: { portalFlights: '8×', portalHotels: '8×', directFlights: '4×', directHotels: '4×', general: '1×' },
+        effectiveReturn: { portal: '8× · 1.5¢ = 12%', direct: '4× · 1.7¢ = 6.8%' },
+      },
+      {
+        id:'MR', name:'Amex MR', color:'#10b981', fee:'$895 (Plat)',
+        portal: { flights: 1.0, hotels: 0.7, note: '' },
+        earn: { portalFlights: '5×', portalHotels: '5×', directFlights: '5×', directHotels: '1×', general: '1×' },
+        effectiveReturn: { portal: '5× · 1¢ = 5%', direct: '5× · 1.6¢ = 8%' },
+      },
+      {
+        id:'TYP', name:'Citi TYP', color:'#6366f1', fee:'$95 (Strata)',
+        portal: { flights: 1.0, hotels: 1.0, note: '' },
+        earn: { portalFlights: '3×', portalHotels: '10×', directFlights: '3×', directHotels: '3×', general: '1×' },
+        effectiveReturn: { portal: '10× · 1¢ = 10%', direct: '3× · 1.4¢ = 4.2%' },
+      },
+      {
+        id:'C1', name:'Capital One', color:'#ef4444', fee:'$395 (VX)',
+        portal: { flights: 1.0, hotels: 1.0, note: '' },
+        earn: { portalFlights: '5×', portalHotels: '10×', directFlights: '2×', directHotels: '2×', general: '2×' },
+        effectiveReturn: { portal: '10× · 1¢ = 10%', direct: '2× · 1.5¢ = 3%' },
+      },
+      {
+        id:'Bilt', name:'Bilt', color:'#f59e0b', fee:'$0–$495',
+        portal: { flights: 1.25, hotels: 1.25, note: '固定值' },
+        earn: { portalFlights: '2×', portalHotels: '2×', directFlights: '2×', directHotels: '2×', general: '1×' },
+        effectiveReturn: { portal: '2× · 1.25¢ = 2.5%', direct: '2× · 2.0¢ = 4%' },
+      },
+      {
+        id:'MB', name:'Marriott Bonvoy', color:'#ec4899', fee:'$0–$650',
+        portal: { flights: null, hotels: 0.9, note: '直接兑换' },
+        earn: { portalFlights: '—', portalHotels: '—', directFlights: '—', directHotels: '—', general: '—' },
+        effectiveReturn: { portal: 'N/A', direct: '0.7–1.2¢/pt' },
+      },
+    ];
+
+    const AIRLINES = [
+      { id:'AC', name:'Air Canada Aeroplan', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.5 },
+      { id:'NH', name:'ANA Mileage Club', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.5 },
+      { id:'AV', name:'Avianca LifeMiles', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.3 },
+      { id:'BR', name:'EVA Air', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.2 },
+      { id:'SQ', name:'Singapore KrisFlyer', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.4 },
+      { id:'TK', name:'Turkish Miles&Smiles', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.4 },
+      { id:'UA', name:'United MileagePlus', group:'Star Alliance', groupColor:'#fbbf24', avgCpp:1.2 },
+      { id:'AA', name:'American AAdvantage', group:'oneworld', groupColor:'#f87171', avgCpp:1.4 },
+      { id:'BA', name:'British Airways Avios', group:'oneworld', groupColor:'#f87171', avgCpp:1.2 },
+      { id:'CX', name:'Cathay Asia Miles', group:'oneworld', groupColor:'#f87171', avgCpp:1.3 },
+      { id:'IB', name:'Iberia Avios', group:'oneworld', groupColor:'#f87171', avgCpp:1.3 },
+      { id:'JL', name:'JAL Mileage Bank', group:'oneworld', groupColor:'#f87171', avgCpp:1.3 },
+      { id:'QF', name:'Qantas Frequent Flyer', group:'oneworld', groupColor:'#f87171', avgCpp:1.1 },
+      { id:'QR', name:'Qatar Privilege Club', group:'oneworld', groupColor:'#f87171', avgCpp:1.4 },
+      { id:'AF', name:'Air France/KLM Flying Blue', group:'SkyTeam', groupColor:'#60a5fa', avgCpp:1.2 },
+      { id:'DL', name:'Delta SkyMiles', group:'SkyTeam', groupColor:'#60a5fa', avgCpp:1.2 },
+      { id:'VS', name:'Virgin Atlantic', group:'SkyTeam', groupColor:'#60a5fa', avgCpp:1.3 },
+      { id:'EK', name:'Emirates Skywards', group:'Independent', groupColor:'#a78bfa', avgCpp:1.0 },
+      { id:'EY', name:'Etihad Guest', group:'Independent', groupColor:'#a78bfa', avgCpp:1.2 },
+    ];
+
+    const AIRLINE_TRANSFERS = [
+      ['UR','AC',1],['UR','BA',1],['UR','AF',1],['UR','IB',1],['UR','SQ',1],['UR','UA',1],['UR','VS',1],['UR','BR',1],['UR','EK',1],
+      ['MR','AC',1],['MR','NH',0.5],['MR','AV',1],['MR','BA',1],['MR','CX',0.8],['MR','DL',1],['MR','EK',1],['MR','EY',1],['MR','AF',1],['MR','IB',1],['MR','SQ',1],['MR','VS',1],['MR','QF',1],
+      ['TYP','AC',1],['TYP','AV',1],['TYP','CX',1],['TYP','EK',1],['TYP','EY',1],['TYP','BR',1],['TYP','AF',1],['TYP','QF',1],['TYP','QR',1],['TYP','SQ',1],['TYP','TK',1],['TYP','VS',1],
+      ['C1','AC',1],['C1','AV',1],['C1','BA',1],['C1','CX',1],['C1','EK',1],['C1','EY',1],['C1','BR',1],['C1','AF',1],['C1','IB',1],['C1','JL',0.75],['C1','QR',1],['C1','SQ',1],['C1','TK',1],['C1','VS',1],
+      ['Bilt','AA',1],['Bilt','AC',1],['Bilt','AF',1],['Bilt','BA',1],['Bilt','CX',1],['Bilt','EK',1],['Bilt','IB',1],['Bilt','TK',1],['Bilt','UA',1],['Bilt','VS',1],['Bilt','QR',1],
+      ['MB','AA',0.42],['MB','AC',0.42],['MB','NH',0.42],['MB','AV',0.42],['MB','BA',0.42],['MB','CX',0.42],['MB','DL',0.42],['MB','EK',0.42],['MB','EY',0.42],['MB','AF',0.42],['MB','IB',0.42],['MB','JL',0.42],['MB','QF',0.42],['MB','QR',0.42],['MB','SQ',0.42],['MB','TK',0.42],['MB','UA',0.37],['MB','VS',0.42],
+    ];
+
+    const HOTELS = [
+      { id:'HY', name:'World of Hyatt', group:'Luxury', groupColor:'#fbbf24', avgCpp:2.0 },
+      { id:'HH', name:'Hilton Honors', group:'Mid-Scale', groupColor:'#60a5fa', avgCpp:0.5 },
+      { id:'IHG', name:'IHG One Rewards', group:'Mid-Scale', groupColor:'#60a5fa', avgCpp:0.5 },
+      { id:'MB_H', name:'Marriott Bonvoy', group:'Luxury', groupColor:'#fbbf24', avgCpp:0.8 },
+      { id:'WY', name:'Wyndham Rewards', group:'Economy', groupColor:'#a78bfa', avgCpp:1.1 },
+      { id:'CH', name:'Choice Privileges', group:'Economy', groupColor:'#a78bfa', avgCpp:0.6 },
+      { id:'AL', name:'Accor Live Limitless', group:'Luxury', groupColor:'#fbbf24', avgCpp:0.8 },
+    ];
+
+    const HOTEL_TRANSFERS = [
+      ['UR','HY',1],['UR','IHG',1],['UR','MB_H',1],['UR','WY',1],
+      ['MR','HH',2],['MR','MB_H',1],['MR','CH',1],
+      ['TYP','WY',1],['TYP','CH',1],['TYP','AL',0.5],
+      ['C1','WY',1],['C1','CH',1],['C1','AL',0.5],
+      ['Bilt','HY',1],['Bilt','HH',1],['Bilt','IHG',1],['Bilt','MB_H',1],['Bilt','AL',0.67],
+    ];
+
+    // ═══════════════════════════════════════════════════
+    //  PORTAL TABLE
+    // ═══════════════════════════════════════════════════
+
+    const portalWrap = document.getElementById('portalTableWrap');
+    let ptHtml = `<table class="portal-table">
+      <thead><tr>
+        <th>积分计划</th><th>年费</th>
+        <th>Portal 机票<br><span style="font-weight:400">CPP</span></th>
+        <th>Portal 酒店<br><span style="font-weight:400">CPP</span></th>
+        <th>Portal Earn Rate</th>
+        <th>转点平均 CPP</th>
+        <th>有效回报率</th>
+      </tr></thead><tbody>`;
+
+    // Find best portal values
+    const bestPortalFlight = Math.max(...CARDS.filter(c => c.portal.flights).map(c => c.portal.flights));
+    const bestPortalHotel = Math.max(...CARDS.filter(c => c.portal.hotels).map(c => c.portal.hotels));
+
+    CARDS.forEach(c => {
+      const pf = c.portal.flights;
+      const ph = c.portal.hotels;
+      const pfClass = pf === bestPortalFlight ? 'cpp-best' : '';
+      const phClass = ph === bestPortalHotel ? 'cpp-best' : '';
+      ptHtml += `<tr>
+        <td><span class="card-dot-sm" style="background:${c.color}"></span>${c.name}</td>
+        <td style="color:var(--dim);font-size:12px">${c.fee}</td>
+        <td><span class="cpp-val ${pfClass}">${pf !== null ? pf + '¢' : '<span class="cpp-na">—</span>'}</span></td>
+        <td><span class="cpp-val ${phClass}">${ph !== null ? ph + '¢' : '<span class="cpp-na">—</span>'}</span></td>
+        <td style="font-size:11px;color:var(--dim)">${c.earn.portalFlights} 机票 / ${c.earn.portalHotels} 酒店</td>
+        <td style="font-size:12px">${c.effectiveReturn.direct}</td>
+        <td style="font-size:12px;font-weight:500">${c.effectiveReturn.portal}</td>
+      </tr>`;
+    });
+    ptHtml += '</tbody></table>';
+    portalWrap.innerHTML = ptHtml;
+
+    // ═══════════════════════════════════════════════════
+    //  DESTINATION PICKER
+    // ═══════════════════════════════════════════════════
+
+    let pickerMode = 'airlines';
+    let selectedDest = null;
+
+    function renderDestGrid() {
+      const grid = document.getElementById('destGrid');
+      const dests = pickerMode === 'airlines' ? AIRLINES : HOTELS;
+      let html = '';
+      let lastGroup = null;
+      dests.forEach(d => {
+        if (d.group !== lastGroup) {
+          html += `<div style="grid-column:1/-1;font-size:10px;color:${d.groupColor};font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:${lastGroup ? '8' : '0'}px">${d.group}</div>`;
+          lastGroup = d.group;
+        }
+        const sel = selectedDest === d.id ? ' selected' : '';
+        html += `<button class="dest-btn${sel}" data-id="${d.id}">
+          <span class="code" style="color:${d.groupColor}">${d.id.replace('_H','')}</span>
+          <span class="name">${d.name}</span>
+        </button>`;
+      });
+      grid.innerHTML = html;
+
+      grid.querySelectorAll('.dest-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedDest = btn.dataset.id;
+          renderDestGrid();
+          renderResult();
+        });
+      });
+    }
+
+    function renderResult() {
+      const panel = document.getElementById('resultPanel');
+      if (!selectedDest) {
+        panel.innerHTML = '<div class="result-empty">👆 选择一个航空公司或酒店，查看最佳转点方案</div>';
+        return;
+      }
+
+      const dests = pickerMode === 'airlines' ? AIRLINES : HOTELS;
+      const transfers = pickerMode === 'airlines' ? AIRLINE_TRANSFERS : HOTEL_TRANSFERS;
+      const dest = dests.find(d => d.id === selectedDest);
+      if (!dest) return;
+
+      // Find all cards that can transfer to this destination
+      const options = transfers.filter(t => t[1] === selectedDest).map(t => {
+        const card = CARDS.find(c => c.id === t[0]);
+        if (!card) return null;
+        const ratio = t[2];
+        const effectiveCpp = dest.avgCpp * ratio; // what 1 card point is worth
+        const value100k = Math.round(effectiveCpp * 100000 / 100); // $ value of 100k points
+        return { card, ratio, effectiveCpp, value100k, miles: ratio * 100000 };
+      }).filter(Boolean);
+
+      options.sort((a, b) => b.effectiveCpp - a.effectiveCpp);
+      const best = options.length > 0 ? options[0] : null;
+
+      let html = `<div class="result-title" style="color:${dest.groupColor}">${dest.name}</div>`;
+      html += `<div class="result-sub">${dest.group} · 里程/积分均价 ${dest.avgCpp}¢/pt · ${options.length} 个积分计划可转入</div>`;
+
+      if (options.length === 0) {
+        html += '<div style="color:#666;padding:20px 0">没有直接转点伙伴</div>';
+      } else {
+        html += '<div class="transfer-cards">';
+        options.forEach(opt => {
+          const isBest = opt === best;
+          const ratioStr = opt.ratio === 1 ? '1 : 1' : opt.ratio === 2 ? '1 : 2' : `1 : ${opt.ratio}`;
+          html += `<div class="transfer-card${isBest ? ' best' : ''}" style="border-color:${opt.card.color}22">
+            ${isBest ? '<div class="badge">⭐ 推荐</div>' : ''}
+            <div class="card-name" style="color:${opt.card.color}">${opt.card.name}</div>
+            <div class="ratio">转点比例: <strong>${ratioStr}</strong></div>
+            <div class="ratio">年费: ${opt.card.fee}</div>
+            <div class="value-row">
+              <div>
+                <div class="value-big" style="color:${isBest ? '#10b981' : opt.card.color}">${opt.effectiveCpp.toFixed(1)}¢</div>
+                <div class="value-unit">有效 CPP</div>
+              </div>
+              <div style="text-align:right">
+                <div class="value-big" style="color:${isBest ? '#10b981' : '#ccc'}">$${opt.value100k}</div>
+                <div class="value-unit">100k 积分价值</div>
+              </div>
+            </div>
+            <div class="value-calc">100k → ${(opt.miles/1000).toFixed(0)}k miles × ${dest.avgCpp}¢ = $${opt.value100k}</div>
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      panel.innerHTML = html;
+    }
+
+    // Tab switching
+    document.querySelectorAll('.picker-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.picker-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        pickerMode = tab.dataset.pick;
+        selectedDest = null;
+        renderDestGrid();
+        renderResult();
+      });
+    });
+
+    // Init
+    renderDestGrid();
+    renderResult();
+
+  </script>
+</body>
+</html>
