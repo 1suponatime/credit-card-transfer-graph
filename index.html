@@ -1,64 +1,126 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>信用卡转点二分图 — Credit Card Transfer Partners</title>
-  <meta name="description" content="Interactive bipartite graph of US credit card transfer partners to airlines and hotels">
+  <meta name="description"
+    content="Interactive bipartite graph of US credit card transfer partners to airlines and hotels">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       background: #0a0a1a;
       color: #e0e0e0;
       font-family: 'Inter', sans-serif;
       overflow: hidden;
-      width: 100vw; height: 100vh;
+      width: 100vw;
+      height: 100vh;
     }
-    #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
 
     /* Title */
     #title-bar {
-      position: fixed; top: 0; left: 0; right: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
       padding: 10px 24px;
-      background: linear-gradient(180deg, rgba(10,10,26,0.9) 0%, rgba(10,10,26,0) 100%);
-      z-index: 10; pointer-events: none;
+      background: linear-gradient(180deg, rgba(10, 10, 26, 0.9) 0%, rgba(10, 10, 26, 0) 100%);
+      z-index: 10;
+      pointer-events: none;
       transition: opacity 1s ease;
     }
-    #title-bar.faded { opacity: 1; }
+
+    #title-bar.faded {
+      opacity: 1;
+    }
+
     #title-bar h1 {
-      font-size: 18px; font-weight: 700;
+      font-size: 18px;
+      font-weight: 700;
       background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
-      -webkit-background-clip: text; background-clip: text;
+      -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    #title-bar p { font-size: 13px; color: #aaa; margin-top: 4px; }
-    #title-bar a { color: #c4b5fd; text-decoration: none; pointer-events: auto; padding: 2px 8px; background: rgba(167,139,250,0.1); border-radius: 6px; transition: background 0.2s; }
-    #title-bar a:hover { background: rgba(167,139,250,0.2); }
+
+    #title-bar p {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+
+    #title-bar a {
+      color: #c4b5fd;
+      text-decoration: none;
+      pointer-events: auto;
+      padding: 2px 8px;
+      background: rgba(167, 139, 250, 0.1);
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    #title-bar a:hover {
+      background: rgba(167, 139, 250, 0.2);
+    }
 
     /* Mode Toggle */
     #mode-toggle {
-      position: fixed; top: 12px; right: 16px; z-index: 20;
-      display: flex; gap: 2px;
-      padding: 3px; background: rgba(20,20,40,0.85);
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 20;
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: rgba(20, 20, 40, 0.85);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
     }
+
     .mode-btn {
-      padding: 7px 16px; border: none; background: none;
-      color: #666; font-family: 'Inter', sans-serif;
-      font-size: 12px; font-weight: 500; border-radius: 8px;
-      cursor: pointer; transition: all 0.2s;
+      padding: 7px 16px;
+      border: none;
+      background: none;
+      color: #666;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .mode-btn:hover { color: #ccc; }
+
+    .mode-btn:hover {
+      color: #ccc;
+    }
+
     .mode-btn.active {
-      background: rgba(255,255,255,0.1); color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
     /* Legend — under title bar */
     #legend-wrap {
-      position: fixed; top: 56px; left: 16px;
+      position: fixed; bottom: 12px; left: 16px;
       z-index: 10; pointer-events: auto;
     }
     #legend-toggle {
@@ -67,97 +129,266 @@
       border-radius: 8px; color: #aaa; font-family: 'Inter', sans-serif;
       font-size: 11px; cursor: pointer; transition: all 0.2s;
     }
-    #legend-toggle:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    #legend-toggle:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
     #legend {
-      display: flex; gap: 10px; padding: 8px 16px; margin-top: 6px;
+      display: flex; gap: 10px; padding: 8px 16px;
+      margin-bottom: 6px;
       background: rgba(20,20,40,0.85); backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
-      font-size: 11px; flex-wrap: wrap;
+      font-size: 11px; flex-wrap: wrap; max-width: 400px;
     }
-    #legend.hidden { display: none; }
-    .legend-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+
+    #legend.hidden {
+      display: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
     .legend-item.clickable {
-      cursor: pointer; padding: 3px 8px; border-radius: 6px; margin: -3px -2px;
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin: -3px -2px;
       transition: background 0.2s;
     }
-    .legend-item.clickable:hover { background: rgba(255,255,255,0.06); }
-    .legend-item.clickable.active { background: rgba(255,255,255,0.1); box-shadow: 0 0 12px rgba(255,255,255,0.08); }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    .legend-item.clickable:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .legend-item.clickable.active {
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
 
     /* Tooltip */
     #tooltip {
-      position: fixed; display: none;
-      padding: 10px 16px; background: rgba(15,15,35,0.95);
-      backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px; font-size: 13px;
-      z-index: 100; max-width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      position: fixed;
+      display: none;
+      padding: 10px 16px;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      font-size: 13px;
+      z-index: 100;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     }
-    #tooltip.locked { pointer-events: auto; }
-    #tooltip:not(.locked) { pointer-events: none; }
-    #tooltip .tt-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-    #tooltip .tt-sub { color: #888; font-size: 11px; margin-bottom: 6px; }
-    #tooltip .tt-partners { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    #tooltip.locked {
+      pointer-events: auto;
+    }
+
+    #tooltip:not(.locked) {
+      pointer-events: none;
+    }
+
+    #tooltip .tt-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    #tooltip .tt-sub {
+      color: #888;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    #tooltip .tt-partners {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
     #tooltip .tt-tag {
-      padding: 2px 8px; border-radius: 6px; font-size: 11px;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-      text-decoration: none; transition: background 0.15s;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+      transition: background 0.15s;
     }
-    #tooltip .tt-tag:hover { background: rgba(255,255,255,0.12); }
-    #tooltip .tt-src { font-size: 10px; color: #60a5fa; margin-top: 8px; display: block; text-decoration: none; }
-    #tooltip .tt-src:hover { text-decoration: underline; }
+
+    #tooltip .tt-tag:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    #tooltip .tt-src {
+      font-size: 10px;
+      color: #60a5fa;
+      margin-top: 8px;
+      display: block;
+      text-decoration: none;
+    }
+
+    #tooltip .tt-src:hover {
+      text-decoration: underline;
+    }
 
     /* Info panel — bottom-right */
     #info-panel {
-      position: fixed; bottom: 60px; right: 16px;
-      padding: 10px 14px; background: rgba(15,15,35,0.75);
-      backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px; z-index: 10; font-size: 11px;
-      opacity: 0.7; transition: opacity 0.3s;
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      padding: 10px 14px;
+      background: rgba(15, 15, 35, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      z-index: 10;
+      font-size: 11px;
+      opacity: 0.7;
+      transition: opacity 0.3s;
     }
-    #info-panel:hover { opacity: 1; }
-    #info-panel h3 { font-size: 11px; font-weight: 600; margin-bottom: 4px; color: #a78bfa; }
-    #info-panel .stat { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-    #info-panel .stat-label { color: #888; font-size: 10px; }
-    #info-panel .stat-value { font-weight: 500; font-size: 10px; }
+
+    #info-panel:hover {
+      opacity: 1;
+    }
+
+    #info-panel h3 {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #a78bfa;
+    }
+
+    #info-panel .stat {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    #info-panel .stat-label {
+      color: #888;
+      font-size: 10px;
+    }
+
+    #info-panel .stat-value {
+      font-weight: 500;
+      font-size: 10px;
+    }
 
     /* Controls — bottom-left */
     #controls-hint {
-      position: fixed; bottom: 60px; left: 16px;
-      padding: 8px 12px; background: rgba(15,15,35,0.6);
-      backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 8px; z-index: 10; font-size: 10px; color: #555;
-      line-height: 1.5; opacity: 0.6; transition: opacity 0.3s;
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      padding: 8px 12px;
+      background: rgba(15, 15, 35, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      z-index: 10;
+      font-size: 10px;
+      color: #555;
+      line-height: 1.5;
+      opacity: 0.6;
+      transition: opacity 0.3s;
     }
-    #controls-hint:hover { opacity: 1; }
+
+    #controls-hint:hover {
+      opacity: 1;
+    }
+
     #controls-hint kbd {
-      background: rgba(255,255,255,0.08); padding: 1px 5px;
-      border-radius: 3px; font-family: 'Inter', sans-serif; font-size: 9px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'Inter', sans-serif;
+      font-size: 9px;
     }
 
     /* Mobile */
     @media (max-width: 640px) {
-      #title-bar { padding: 6px 12px; }
-      #title-bar h1 { font-size: 14px; }
-      #title-bar p { font-size: 11px; }
-      #legend-wrap { top: 44px; left: 8px; }
+      #title-bar {
+        padding: 6px 12px;
+      }
+
+      #title-bar h1 {
+        font-size: 14px;
+      }
+
+      #title-bar p {
+        font-size: 11px;
+      }
+
+      #legend-wrap {
+        top: 50px;
+        left: 8px;
+      }
+
+      #legend-toggle {
+        font-size: 10px;
+        padding: 4px 10px;
+      }
+
+      #legend-wrap { bottom: 8px; left: 8px; }
       #legend-toggle { font-size: 10px; padding: 4px 10px; }
-      #legend { font-size: 9px; gap: 6px; padding: 6px 12px; }
+      #legend { font-size: 9px; gap: 6px; padding: 6px 12px; max-width: 280px; }
       .legend-dot { width: 6px; height: 6px; }
-      #mode-toggle { top: auto; bottom: 12px; right: 12px; z-index: 20; }
-      #info-panel { display: none; }
-      #controls-hint { display: none; }
-      #tooltip { max-width: 280px; font-size: 12px; padding: 8px 12px; }
-      #tooltip .tt-title { font-size: 13px; }
-      #tooltip .tt-tag { font-size: 10px; padding: 2px 6px; }
+
+      #mode-toggle {
+        top: auto;
+        bottom: 12px;
+        right: 12px;
+        z-index: 20;
+      }
+
+      #info-panel {
+        display: none;
+      }
+
+      #controls-hint {
+        display: none;
+      }
+
+      #tooltip {
+        max-width: 280px;
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+
+      #tooltip .tt-title {
+        font-size: 13px;
+      }
+
+      #tooltip .tt-tag {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div id="canvas-container"></div>
 
   <div id="title-bar">
     <h1>💳 Credit Card Transfer Partners</h1>
-    <p>by <a href="https://github.com/1suponatime" style="color:#a78bfa">1suponatime</a> · 2026.3 · <a href="redemption-value.html">💎 兑换价值</a> · <a href="references.html">📚 数据来源</a></p>
+    <p>by <a href="https://github.com/1suponatime" style="color:#a78bfa">1suponatime</a> · 2026.3 · <a
+        href="redemption-value.html">💎 兑换价值</a> · <a href="references.html">📚 数据来源</a></p>
   </div>
 
   <div id="mode-toggle">
@@ -178,8 +409,8 @@
   </div>
 
   <div id="legend-wrap">
-    <button id="legend-toggle">🏷️ 图例</button>
     <div id="legend" class="hidden"></div>
+    <button id="legend-toggle">🏷️ 图例</button>
   </div>
   <div id="tooltip"></div>
 
@@ -205,76 +436,76 @@
     };
 
     const CARD_PROGRAMS = [
-      { id: 'UR',  name: 'Chase UR',   fullName: 'Chase Ultimate Rewards',   color: '#3b82f6', ref: 'https://ultimaterewardspoints.chase.com/transfer-partners' },
-      { id: 'MR',  name: 'Amex MR',    fullName: 'Amex Membership Rewards',  color: '#10b981', ref: 'https://global.americanexpress.com/rewards/transfer' },
-      { id: 'TYP', name: 'Citi TYP',   fullName: 'Citi ThankYou Points',     color: '#6366f1', ref: 'https://www.thankyou.com/redeem/transfer-partners' },
-      { id: 'C1',  name: 'Cap One',    fullName: 'Capital One Miles',        color: '#ef4444', ref: 'https://www.capitalone.com/credit-cards/benefits/transfer-miles/' },
-      { id: 'Bilt',name: 'Bilt',       fullName: 'Bilt Rewards',             color: '#f59e0b', ref: 'https://www.biltrewards.com/transfer-partners' },
-      { id: 'MB',  name: 'Marriott',   fullName: 'Marriott Bonvoy',          color: '#ec4899', ref: 'https://www.marriott.com/loyalty/redeem/travel/airlines.mi' },
+      { id: 'UR', name: 'Chase UR', fullName: 'Chase Ultimate Rewards', color: '#3b82f6', ref: 'https://ultimaterewardspoints.chase.com/transfer-partners' },
+      { id: 'MR', name: 'Amex MR', fullName: 'Amex Membership Rewards', color: '#10b981', ref: 'https://global.americanexpress.com/rewards/transfer' },
+      { id: 'TYP', name: 'Citi TYP', fullName: 'Citi ThankYou Points', color: '#6366f1', ref: 'https://www.thankyou.com/redeem/transfer-partners' },
+      { id: 'C1', name: 'Cap One', fullName: 'Capital One Miles', color: '#ef4444', ref: 'https://www.capitalone.com/credit-cards/benefits/transfer-miles/' },
+      { id: 'Bilt', name: 'Bilt', fullName: 'Bilt Rewards', color: '#f59e0b', ref: 'https://www.biltrewards.com/transfer-partners' },
+      { id: 'MB', name: 'Marriott', fullName: 'Marriott Bonvoy', color: '#ec4899', ref: 'https://www.marriott.com/loyalty/redeem/travel/airlines.mi' },
     ];
 
     const PRIMARY_REF = 'https://www.uscreditcardguide.com/wings-of-the-points/';
 
     const AIRLINES = [
-      { id:'AC', name:'Air Canada (Aeroplan)',      code:'AC', alliance:'Star Alliance' },
-      { id:'NH', name:'ANA (全日空)',                code:'NH', alliance:'Star Alliance' },
-      { id:'OZ', name:'Asiana Airlines',            code:'OZ', alliance:'Star Alliance' },
-      { id:'AV', name:'Avianca (LifeMiles)',        code:'AV', alliance:'Star Alliance' },
-      { id:'BR', name:'EVA Air (长荣)',              code:'BR', alliance:'Star Alliance' },
-      { id:'LH', name:'Lufthansa (M&M)',            code:'LH', alliance:'Star Alliance' },
-      { id:'SQ', name:'Singapore (新航)',            code:'SQ', alliance:'Star Alliance' },
-      { id:'TK', name:'Turkish (土航)',              code:'TK', alliance:'Star Alliance' },
-      { id:'UA', name:'United (美联航)',              code:'UA', alliance:'Star Alliance' },
-      { id:'AA', name:'American (AA)',               code:'AA', alliance:'oneworld' },
-      { id:'BA', name:'British Airways',             code:'BA', alliance:'oneworld' },
-      { id:'CX', name:'Cathay Pacific (国泰)',       code:'CX', alliance:'oneworld' },
-      { id:'IB', name:'Iberia',                      code:'IB', alliance:'oneworld' },
-      { id:'JL', name:'Japan Airlines (日航)',        code:'JL', alliance:'oneworld' },
-      { id:'MH', name:'Malaysia (马航)',              code:'MH', alliance:'oneworld' },
-      { id:'QF', name:'Qantas (澳航)',               code:'QF', alliance:'oneworld' },
-      { id:'QR', name:'Qatar (卡航)',                 code:'QR', alliance:'oneworld' },
-      { id:'AM', name:'Aeromexico',                  code:'AM', alliance:'SkyTeam' },
-      { id:'AF', name:'Air France/KLM (FB)',         code:'AF', alliance:'SkyTeam' },
-      { id:'DL', name:'Delta (达美)',                 code:'DL', alliance:'SkyTeam' },
-      { id:'KE', name:'Korean Air (大韩)',            code:'KE', alliance:'SkyTeam' },
-      { id:'VS', name:'Virgin Atlantic',             code:'VS', alliance:'SkyTeam' },
-      { id:'EK', name:'Emirates (阿联酋)',            code:'EK', alliance:'Independent' },
-      { id:'EY', name:'Etihad',                      code:'EY', alliance:'Independent' },
-      { id:'HA', name:'Hawaiian',                    code:'HA', alliance:'Independent' },
-      { id:'B6', name:'JetBlue',                     code:'B6', alliance:'Independent' },
-      { id:'WN', name:'Southwest (西南)',             code:'WN', alliance:'Independent' },
+      { id: 'AC', name: 'Air Canada (Aeroplan)', code: 'AC', alliance: 'Star Alliance' },
+      { id: 'NH', name: 'ANA (全日空)', code: 'NH', alliance: 'Star Alliance' },
+      { id: 'OZ', name: 'Asiana Airlines', code: 'OZ', alliance: 'Star Alliance' },
+      { id: 'AV', name: 'Avianca (LifeMiles)', code: 'AV', alliance: 'Star Alliance' },
+      { id: 'BR', name: 'EVA Air (长荣)', code: 'BR', alliance: 'Star Alliance' },
+      { id: 'LH', name: 'Lufthansa (M&M)', code: 'LH', alliance: 'Star Alliance' },
+      { id: 'SQ', name: 'Singapore (新航)', code: 'SQ', alliance: 'Star Alliance' },
+      { id: 'TK', name: 'Turkish (土航)', code: 'TK', alliance: 'Star Alliance' },
+      { id: 'UA', name: 'United (美联航)', code: 'UA', alliance: 'Star Alliance' },
+      { id: 'AA', name: 'American (AA)', code: 'AA', alliance: 'oneworld' },
+      { id: 'BA', name: 'British Airways', code: 'BA', alliance: 'oneworld' },
+      { id: 'CX', name: 'Cathay Pacific (国泰)', code: 'CX', alliance: 'oneworld' },
+      { id: 'IB', name: 'Iberia', code: 'IB', alliance: 'oneworld' },
+      { id: 'JL', name: 'Japan Airlines (日航)', code: 'JL', alliance: 'oneworld' },
+      { id: 'MH', name: 'Malaysia (马航)', code: 'MH', alliance: 'oneworld' },
+      { id: 'QF', name: 'Qantas (澳航)', code: 'QF', alliance: 'oneworld' },
+      { id: 'QR', name: 'Qatar (卡航)', code: 'QR', alliance: 'oneworld' },
+      { id: 'AM', name: 'Aeromexico', code: 'AM', alliance: 'SkyTeam' },
+      { id: 'AF', name: 'Air France/KLM (FB)', code: 'AF', alliance: 'SkyTeam' },
+      { id: 'DL', name: 'Delta (达美)', code: 'DL', alliance: 'SkyTeam' },
+      { id: 'KE', name: 'Korean Air (大韩)', code: 'KE', alliance: 'SkyTeam' },
+      { id: 'VS', name: 'Virgin Atlantic', code: 'VS', alliance: 'SkyTeam' },
+      { id: 'EK', name: 'Emirates (阿联酋)', code: 'EK', alliance: 'Independent' },
+      { id: 'EY', name: 'Etihad', code: 'EY', alliance: 'Independent' },
+      { id: 'HA', name: 'Hawaiian', code: 'HA', alliance: 'Independent' },
+      { id: 'B6', name: 'JetBlue', code: 'B6', alliance: 'Independent' },
+      { id: 'WN', name: 'Southwest (西南)', code: 'WN', alliance: 'Independent' },
     ];
 
     const AIRLINE_TRANSFERS = [
-      ['UR','AC',1],['UR','BA',1],['UR','AF',1],['UR','IB',1],['UR','SQ',1],['UR','UA',1],['UR','VS',1],['UR','B6',1],['UR','WN',1],['UR','BR',1],['UR','EK',1],
-      ['MR','AC',1],['MR','NH',0.5],['MR','AV',1],['MR','BA',1],['MR','CX',0.8],['MR','DL',1],['MR','EK',1],['MR','EY',1],['MR','AF',1],['MR','HA',1],['MR','IB',1],['MR','SQ',1],['MR','VS',1],['MR','QF',1],['MR','B6',0.8],
-      ['TYP','AC',1],['TYP','AV',1],['TYP','CX',1],['TYP','EK',1],['TYP','EY',1],['TYP','BR',1],['TYP','AF',1],['TYP','B6',1],['TYP','MH',1],['TYP','QF',1],['TYP','QR',1],['TYP','SQ',1],['TYP','TK',1],['TYP','VS',1],
-      ['C1','AC',1],['C1','AV',1],['C1','BA',1],['C1','CX',1],['C1','EK',1],['C1','EY',1],['C1','BR',1],['C1','AF',1],['C1','IB',1],['C1','JL',0.75],['C1','QR',1],['C1','SQ',1],['C1','TK',1],['C1','VS',1],
-      ['Bilt','AA',1],['Bilt','AC',1],['Bilt','AF',1],['Bilt','BA',1],['Bilt','CX',1],['Bilt','EK',1],['Bilt','IB',1],['Bilt','TK',1],['Bilt','UA',1],['Bilt','VS',1],['Bilt','QR',1],
-      ['MB','AA',0.42],['MB','AC',0.42],['MB','NH',0.42],['MB','AV',0.42],['MB','BA',0.42],['MB','CX',0.42],['MB','DL',0.42],['MB','EK',0.42],['MB','EY',0.42],['MB','AF',0.42],['MB','HA',0.42],['MB','IB',0.42],['MB','JL',0.42],['MB','KE',0.42],['MB','LH',0.42],['MB','MH',0.42],['MB','QF',0.42],['MB','QR',0.42],['MB','SQ',0.42],['MB','TK',0.42],['MB','UA',0.37],['MB','VS',0.42],
+      ['UR', 'AC', 1], ['UR', 'BA', 1], ['UR', 'AF', 1], ['UR', 'IB', 1], ['UR', 'SQ', 1], ['UR', 'UA', 1], ['UR', 'VS', 1], ['UR', 'B6', 1], ['UR', 'WN', 1], ['UR', 'BR', 1], ['UR', 'EK', 1],
+      ['MR', 'AC', 1], ['MR', 'NH', 0.5], ['MR', 'AV', 1], ['MR', 'BA', 1], ['MR', 'CX', 0.8], ['MR', 'DL', 1], ['MR', 'EK', 1], ['MR', 'EY', 1], ['MR', 'AF', 1], ['MR', 'HA', 1], ['MR', 'IB', 1], ['MR', 'SQ', 1], ['MR', 'VS', 1], ['MR', 'QF', 1], ['MR', 'B6', 0.8],
+      ['TYP', 'AC', 1], ['TYP', 'AV', 1], ['TYP', 'CX', 1], ['TYP', 'EK', 1], ['TYP', 'EY', 1], ['TYP', 'BR', 1], ['TYP', 'AF', 1], ['TYP', 'B6', 1], ['TYP', 'MH', 1], ['TYP', 'QF', 1], ['TYP', 'QR', 1], ['TYP', 'SQ', 1], ['TYP', 'TK', 1], ['TYP', 'VS', 1],
+      ['C1', 'AC', 1], ['C1', 'AV', 1], ['C1', 'BA', 1], ['C1', 'CX', 1], ['C1', 'EK', 1], ['C1', 'EY', 1], ['C1', 'BR', 1], ['C1', 'AF', 1], ['C1', 'IB', 1], ['C1', 'JL', 0.75], ['C1', 'QR', 1], ['C1', 'SQ', 1], ['C1', 'TK', 1], ['C1', 'VS', 1],
+      ['Bilt', 'AA', 1], ['Bilt', 'AC', 1], ['Bilt', 'AF', 1], ['Bilt', 'BA', 1], ['Bilt', 'CX', 1], ['Bilt', 'EK', 1], ['Bilt', 'IB', 1], ['Bilt', 'TK', 1], ['Bilt', 'UA', 1], ['Bilt', 'VS', 1], ['Bilt', 'QR', 1],
+      ['MB', 'AA', 0.42], ['MB', 'AC', 0.42], ['MB', 'NH', 0.42], ['MB', 'AV', 0.42], ['MB', 'BA', 0.42], ['MB', 'CX', 0.42], ['MB', 'DL', 0.42], ['MB', 'EK', 0.42], ['MB', 'EY', 0.42], ['MB', 'AF', 0.42], ['MB', 'HA', 0.42], ['MB', 'IB', 0.42], ['MB', 'JL', 0.42], ['MB', 'KE', 0.42], ['MB', 'LH', 0.42], ['MB', 'MH', 0.42], ['MB', 'QF', 0.42], ['MB', 'QR', 0.42], ['MB', 'SQ', 0.42], ['MB', 'TK', 0.42], ['MB', 'UA', 0.37], ['MB', 'VS', 0.42],
     ];
 
     const HOTELS = [
-      { id:'HY', name:'World of Hyatt (凯悦)',       code:'HY', alliance:'Luxury' },
-      { id:'MB_H', name:'Marriott Bonvoy (万豪)',    code:'MB', alliance:'Luxury' },
-      { id:'HH', name:'Hilton Honors (希尔顿)',      code:'HH', alliance:'Mid-Scale' },
-      { id:'IHG', name:'IHG One Rewards (洲际)',     code:'IHG', alliance:'Mid-Scale' },
-      { id:'WY', name:'Wyndham Rewards (温德姆)',     code:'WY', alliance:'Economy' },
-      { id:'CH', name:'Choice Privileges',           code:'CH', alliance:'Economy' },
-      { id:'AL', name:'Accor Live Limitless (雅高)',  code:'AL', alliance:'Luxury' },
+      { id: 'HY', name: 'World of Hyatt (凯悦)', code: 'HY', alliance: 'Luxury' },
+      { id: 'MB_H', name: 'Marriott Bonvoy (万豪)', code: 'MB', alliance: 'Luxury' },
+      { id: 'HH', name: 'Hilton Honors (希尔顿)', code: 'HH', alliance: 'Mid-Scale' },
+      { id: 'IHG', name: 'IHG One Rewards (洲际)', code: 'IHG', alliance: 'Mid-Scale' },
+      { id: 'WY', name: 'Wyndham Rewards (温德姆)', code: 'WY', alliance: 'Economy' },
+      { id: 'CH', name: 'Choice Privileges', code: 'CH', alliance: 'Economy' },
+      { id: 'AL', name: 'Accor Live Limitless (雅高)', code: 'AL', alliance: 'Luxury' },
     ];
 
     const HOTEL_TRANSFERS = [
       // Chase UR
-      ['UR','HY',1], ['UR','IHG',1], ['UR','MB_H',1], ['UR','WY',1],
+      ['UR', 'HY', 1], ['UR', 'IHG', 1], ['UR', 'MB_H', 1], ['UR', 'WY', 1],
       // Amex MR
-      ['MR','HH',2], ['MR','MB_H',1], ['MR','CH',1],
+      ['MR', 'HH', 2], ['MR', 'MB_H', 1], ['MR', 'CH', 1],
       // Citi TYP
-      ['TYP','WY',1], ['TYP','CH',1], ['TYP','AL',0.5],
+      ['TYP', 'WY', 1], ['TYP', 'CH', 1], ['TYP', 'AL', 0.5],
       // Capital One
-      ['C1','WY',1], ['C1','CH',1], ['C1','AL',0.5],
+      ['C1', 'WY', 1], ['C1', 'CH', 1], ['C1', 'AL', 0.5],
       // Bilt
-      ['Bilt','HY',1], ['Bilt','HH',1], ['Bilt','IHG',1], ['Bilt','MB_H',1], ['Bilt','AL',0.67],
+      ['Bilt', 'HY', 1], ['Bilt', 'HH', 1], ['Bilt', 'IHG', 1], ['Bilt', 'MB_H', 1], ['Bilt', 'AL', 0.67],
       // Marriott Bonvoy — is itself a hotel program, no transfer needed
     ];
 
@@ -295,7 +526,7 @@
     let W = window.innerWidth, H = window.innerHeight;
     const isMobile = () => W < 640;
     const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-W/2, W/2, H/2, -H/2, -1000, 1000);
+    const camera = new THREE.OrthographicCamera(-W / 2, W / 2, H / 2, -H / 2, -1000, 1000);
     camera.position.z = 100;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(W, H);
@@ -337,7 +568,7 @@
       ctx.font = `${fontWeight} ${fontSize}px Inter, sans-serif`;
       ctx.fillStyle = color;
       ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
-      ctx.fillText(text, w/2, h/2);
+      ctx.fillText(text, w / 2, h / 2);
       const tex = new THREE.CanvasTexture(canvas);
       tex.needsUpdate = true;
       return { texture: tex, width: w, height: h };
@@ -369,8 +600,8 @@
       const groups = isAirlines ? ALLIANCES : HOTEL_CHAINS;
       const groupKey = 'alliance';
       const groupOrder = isAirlines
-        ? ['Star Alliance','oneworld','SkyTeam','Independent']
-        : ['Luxury','Mid-Scale','Economy'];
+        ? ['Star Alliance', 'oneworld', 'SkyTeam', 'Independent']
+        : ['Luxury', 'Mid-Scale', 'Economy'];
       const rawTransfers = isAirlines ? AIRLINE_TRANSFERS : HOTEL_TRANSFERS;
 
       // For hotel mode, exclude Marriott from card programs (it IS a hotel program)
@@ -426,7 +657,7 @@
         const { texture, width, height } = createTextTexture(card.name, cardFontSize, '#ffffff', '700');
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
         sprite.scale.set(width, height, 1);
-        sprite.position.set(pos.x - cardR - 8 - width/2, pos.y, 2);
+        sprite.position.set(pos.x - cardR - 8 - width / 2, pos.y, 2);
         nodeGroup.add(sprite);
         labelSprites[card.id] = sprite;
       });
@@ -458,7 +689,7 @@
         const { texture, width, height } = createTextTexture(labelText, destFontSize, mobile ? '#ffffff' : '#dddddd', '500');
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
         sprite.scale.set(width, height, 1);
-        sprite.position.set(pos.x + destR + 4 + width/2, pos.y, 2);
+        sprite.position.set(pos.x + destR + 4 + width / 2, pos.y, 2);
         nodeGroup.add(sprite);
         labelSprites[dest.id] = sprite;
 
@@ -469,7 +700,7 @@
           const { texture: gt, width: gw, height: gh } = createTextTexture(dest[groupKey], glabelSize, gi.color, '600');
           const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: gt, transparent: true, opacity: 0.6, depthTest: false }));
           gs.scale.set(gw, gh, 1);
-          gs.position.set(DEST_X - 30 - gw/2, pos.y + destSpacing * 0.65, 2);
+          gs.position.set(DEST_X - 30 - gw / 2, pos.y + destSpacing * 0.65, 2);
           labelGroup.add(gs);
           lastGroup = dest[groupKey];
         }
@@ -512,7 +743,7 @@
         particleSpeeds[i] = 0.001 + Math.random() * 0.002;
         const card = cards.find(c => c.id === currentTransfers[ei][0]);
         const c = new THREE.Color(card ? card.color : '#fff');
-        pColors[i*3] = c.r; pColors[i*3+1] = c.g; pColors[i*3+2] = c.b;
+        pColors[i * 3] = c.r; pColors[i * 3 + 1] = c.g; pColors[i * 3 + 2] = c.b;
       }
       particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
       particleGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
@@ -656,7 +887,7 @@
       tooltip.classList.toggle('locked', !!lockedNode);
       tooltip.style.display = 'block';
       const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
-      let tx = sx + 16, ty = sy - th/2;
+      let tx = sx + 16, ty = sy - th / 2;
       if (tx + tw > window.innerWidth - 20) tx = sx - tw - 16;
       if (ty < 10) ty = 10;
       if (ty + th > window.innerHeight - 10) ty = window.innerHeight - th - 10;
@@ -722,7 +953,7 @@
     });
 
     // --- Touch events (mobile) ---
-    let touchStartDist = 0, touchStartZoom = 1, isTouchPanning = false, touchPanStart = {x:0,y:0};
+    let touchStartDist = 0, touchStartZoom = 1, isTouchPanning = false, touchPanStart = { x: 0, y: 0 };
 
     renderer.domElement.addEventListener('touchstart', e => {
       e.preventDefault();
@@ -749,7 +980,7 @@
         isTouchPanning = false;
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
-        touchStartDist = Math.sqrt(dx*dx + dy*dy);
+        touchStartDist = Math.sqrt(dx * dx + dy * dy);
         touchStartZoom = zoomLevel;
       }
     }, { passive: false });
@@ -765,7 +996,7 @@
       } else if (e.touches.length === 2) {
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
+        const dist = Math.sqrt(dx * dx + dy * dy);
         zoomLevel = Math.max(0.3, Math.min(3, touchStartZoom * (dist / touchStartDist)));
         updateCamera();
       }
@@ -793,9 +1024,9 @@
           if (!from || !to) continue;
           const t = particleProgress[i];
           const midX = (from.x + to.x) / 2, midY = (from.y + to.y) / 2;
-          particlePositions[i*3]     = (1-t)*(1-t)*from.x + 2*(1-t)*t*midX + t*t*to.x;
-          particlePositions[i*3 + 1] = (1-t)*(1-t)*from.y + 2*(1-t)*t*midY + t*t*to.y;
-          particlePositions[i*3 + 2] = 0.5;
+          particlePositions[i * 3] = (1 - t) * (1 - t) * from.x + 2 * (1 - t) * t * midX + t * t * to.x;
+          particlePositions[i * 3 + 1] = (1 - t) * (1 - t) * from.y + 2 * (1 - t) * t * midY + t * t * to.y;
+          particlePositions[i * 3 + 2] = 0.5;
         }
         particleGeo.attributes.position.needsUpdate = true;
       }
@@ -850,7 +1081,7 @@
     window.addEventListener('resize', () => {
       W = window.innerWidth; H = window.innerHeight;
       renderer.setSize(W, H);
-      camera.left = -W/2; camera.right = W/2; camera.top = H/2; camera.bottom = -H/2;
+      camera.left = -W / 2; camera.right = W / 2; camera.top = H / 2; camera.bottom = -H / 2;
       panOffset = { x: 0, y: 0 }; zoomLevel = 1;
       updateCamera();
       buildGraph(currentMode);
@@ -858,4 +1089,5 @@
 
   </script>
 </body>
+
 </html>
