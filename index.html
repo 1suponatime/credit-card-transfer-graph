@@ -83,8 +83,8 @@
     /* Mode Toggle */
     #mode-toggle {
       position: fixed;
-      top: 12px;
-      right: 16px;
+      bottom: 16px;
+      left: 16px;
       z-index: 20;
       display: flex;
       gap: 2px;
@@ -118,21 +118,13 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
-    /* Legend — top-left under title */
+    /* Legend — inside title bar, flows below text */
     #legend {
-      position: fixed;
-      top: 64px;
-      left: 16px;
-      display: flex;
-      gap: 10px;
-      padding: 6px 14px;
-      background: rgba(20, 20, 40, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      z-index: 10;
-      font-size: 11px;
-      flex-wrap: wrap;
+      display: inline-flex; gap: 10px; padding: 4px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+      font-size: 10px; flex-wrap: wrap; margin-top: 6px;
+      pointer-events: auto;
     }
 
     .legend-item {
@@ -316,13 +308,13 @@
       #title-bar p { font-size: 10px; line-height: 2; }
       #title-bar a { padding: 2px 6px; font-size: 10px; display: inline-block; margin-top: 2px; }
 
-      /* Legend — vertical column below title */
-      #legend { top: 58px; left: 8px; flex-direction: column; gap: 3px; padding: 5px 10px; font-size: 9px; }
-      .legend-dot { width: 5px; height: 5px; }
-      .legend-item { gap: 3px; }
+      /* Legend — vertical inside title bar */
+      #legend { flex-direction: column; gap: 3px; padding: 4px 10px; font-size: 10px; margin-top: 4px; }
+      .legend-dot { width: 7px; height: 7px; }
+      .legend-item { gap: 4px; }
 
-      /* Mode toggle — bottom right, clear of edges */
-      #mode-toggle { top: auto; bottom: 14px; right: 10px; z-index: 20; }
+      /* Mode toggle — bottom left */
+      #mode-toggle { bottom: 10px; left: 8px; }
       .mode-btn { padding: 6px 12px; font-size: 11px; }
 
       /* Hide desktop-only panels */
@@ -342,9 +334,8 @@
 
   <div id="title-bar">
     <h1>💳 Credit Card Transfer Partners</h1>
-    <p>by <a href="https://github.com/1suponatime" style="color:#a78bfa">1suponatime</a> · 2026.3 · <a
-        href="redemption-value.html">💎 兑换价值</a> · <a href="references.html">📚 数据来源</a> · <a
-        href="https://github.com/1suponatime/credit-card-transfer-graph/issues/new">🐛 报错</a></p>
+    <p>by <a href="https://github.com/1suponatime" style="color:#a78bfa">1suponatime</a> · 2026.3<br><a href="redemption-value.html">💎 兑换价值</a> · <a href="references.html">📚 数据来源</a> · <a href="https://github.com/1suponatime/credit-card-transfer-graph/issues/new">🐛 报错</a></p>
+    <div id="legend"></div>
   </div>
 
   <div id="mode-toggle">
@@ -366,7 +357,6 @@
         id="stat-groups">—</span></div>
   </div>
 
-  <div id="legend"></div>
   <div id="tooltip"></div>
 
   <script type="importmap">
