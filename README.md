@@ -31,9 +31,17 @@ Chase UR · Amex MR · Citi TYP · Capital One · Bilt · Marriott Bonvoy
 ## 🚀 本地运行
 
 ```bash
+git clone https://github.com/1suponatime/credit-card-transfer-graph.git
+cd credit-card-transfer-graph
 python3 -m http.server 8080
 # 打开 http://localhost:8080
 ```
+
+## 🤝 贡献
+
+发现数据有误或想添加新的积分计划？欢迎 [提交 Issue](https://github.com/1suponatime/credit-card-transfer-graph/issues)！
+
+项目架构详见 [BLUEPRINT.md](./BLUEPRINT.md)。
 
 ## 📚 数据来源
 
