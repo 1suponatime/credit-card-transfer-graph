@@ -25,14 +25,14 @@
       z-index: 10; pointer-events: none;
       transition: opacity 1s ease;
     }
-    #title-bar.faded { opacity: 0.3; }
+    #title-bar.faded { opacity: 1; }
     #title-bar h1 {
-      font-size: 16px; font-weight: 600;
+      font-size: 18px; font-weight: 700;
       background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
       -webkit-background-clip: text; background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    #title-bar p { font-size: 12px; color: #777; margin-top: 3px; }
+    #title-bar p { font-size: 13px; color: #aaa; margin-top: 4px; }
     #title-bar a { color: #c4b5fd; text-decoration: none; pointer-events: auto; padding: 2px 8px; background: rgba(167,139,250,0.1); border-radius: 6px; transition: background 0.2s; }
     #title-bar a:hover { background: rgba(167,139,250,0.2); }
 
@@ -56,14 +56,25 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
-    /* Legend */
+    /* Legend — under title bar */
+    #legend-wrap {
+      position: fixed; top: 56px; left: 16px;
+      z-index: 10; pointer-events: auto;
+    }
+    #legend-toggle {
+      padding: 5px 12px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(20,20,40,0.85); backdrop-filter: blur(12px);
+      border-radius: 8px; color: #aaa; font-family: 'Inter', sans-serif;
+      font-size: 11px; cursor: pointer; transition: all 0.2s;
+    }
+    #legend-toggle:hover { background: rgba(255,255,255,0.08); color: #fff; }
     #legend {
-      position: fixed; bottom: 20px; left: 16px;
-      display: flex; gap: 12px; padding: 8px 20px;
+      display: flex; gap: 10px; padding: 8px 16px; margin-top: 6px;
       background: rgba(20,20,40,0.85); backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
-      z-index: 10; font-size: 11px; flex-wrap: wrap; justify-content: center;
+      font-size: 11px; flex-wrap: wrap;
     }
+    #legend.hidden { display: none; }
     .legend-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
     .legend-item.clickable {
       cursor: pointer; padding: 3px 8px; border-radius: 6px; margin: -3px -2px;
@@ -128,9 +139,11 @@
       #title-bar { padding: 6px 12px; }
       #title-bar h1 { font-size: 14px; }
       #title-bar p { font-size: 11px; }
+      #legend-wrap { top: 44px; left: 8px; }
+      #legend-toggle { font-size: 10px; padding: 4px 10px; }
+      #legend { font-size: 9px; gap: 6px; padding: 6px 12px; }
+      .legend-dot { width: 6px; height: 6px; }
       #mode-toggle { top: auto; bottom: 12px; right: 12px; z-index: 20; }
-      .mode-btn { padding: 6px 12px; font-size: 11px; }
-      #legend { display: none; }
       #info-panel { display: none; }
       #controls-hint { display: none; }
       #tooltip { max-width: 280px; font-size: 12px; padding: 8px 12px; }
@@ -164,7 +177,10 @@
     <div class="stat"><span class="stat-label" id="stat-group-label">分组</span><span class="stat-value" id="stat-groups">—</span></div>
   </div>
 
-  <div id="legend"></div>
+  <div id="legend-wrap">
+    <button id="legend-toggle">🏷️ 图例</button>
+    <div id="legend" class="hidden"></div>
+  </div>
   <div id="tooltip"></div>
 
   <script type="importmap">
@@ -617,10 +633,9 @@
           const groups = currentMode === 'airlines' ? ALLIANCES : HOTEL_CHAINS;
           const gc = groups[dest.alliance]?.color || '#888';
           const ratioStr = e.ratio === 1 ? '1:1' : `1:${e.ratio}`;
-          html += `<a class="tt-tag" href="${nd.data.ref}" target="_blank" style="border-color:${gc}40">${dest.code} ${ratioStr}</a>`;
+          html += `<span class="tt-tag" style="border-color:${gc}40">${dest.code} ${ratioStr}</span>`;
         });
         html += `</div>`;
-        html += `<a class="tt-src" href="${nd.data.ref}" target="_blank">📎 官方转点页面 ↗</a>`;
       } else {
         const dest = nd.data;
         const groups = currentMode === 'airlines' ? ALLIANCES : HOTEL_CHAINS;
@@ -632,10 +647,9 @@
           const card = CARD_PROGRAMS.find(c => c.id === e.from);
           if (!card) return;
           const ratioStr = e.ratio === 1 ? '1:1' : `1:${e.ratio}`;
-          html += `<a class="tt-tag" href="${card.ref}" target="_blank" style="border-color:${card.color}40;color:${card.color}">${card.name} ${ratioStr}</a>`;
+          html += `<span class="tt-tag" style="border-color:${card.color}40;color:${card.color}">${card.name} ${ratioStr}</span>`;
         });
         html += `</div>`;
-        html += `<a class="tt-src" href="${PRIMARY_REF}" target="_blank">📎 US Credit Card Guide ↗</a>`;
       }
 
       tooltip.innerHTML = html;
@@ -674,8 +688,8 @@
       mouse.x = (e.clientX / W) * 2 - 1;
       mouse.y = -(e.clientY / H) * 2 + 1;
       if (isPanning) {
-        panOffset.x += (e.clientX - panStart.x) / zoomLevel;
-        panOffset.y -= (e.clientY - panStart.y) / zoomLevel;
+        panOffset.x -= (e.clientX - panStart.x) / zoomLevel;
+        panOffset.y += (e.clientY - panStart.y) / zoomLevel;
         panStart = { x: e.clientX, y: e.clientY };
         updateCamera(); return;
       }
@@ -811,6 +825,14 @@
         panOffset = { x: 0, y: 0 }; zoomLevel = 1; updateCamera();
         buildGraph(btn.dataset.mode);
       });
+    });
+
+    // Legend toggle
+    document.getElementById('legend-toggle').addEventListener('click', () => {
+      const legend = document.getElementById('legend');
+      const btn = document.getElementById('legend-toggle');
+      legend.classList.toggle('hidden');
+      btn.textContent = legend.classList.contains('hidden') ? '🏷️ 图例' : '✕ 收起';
     });
 
     // ═══════════════════════════════════════════════════
