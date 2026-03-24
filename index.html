@@ -310,60 +310,29 @@
 
     /* Mobile */
     @media (max-width: 640px) {
-      #title-bar {
-        padding: 6px 12px;
-      }
+      /* Title bar — compact, wrap links */
+      #title-bar { padding: 6px 10px; }
+      #title-bar h1 { font-size: 13px; }
+      #title-bar p { font-size: 10px; line-height: 1.8; }
+      #title-bar a { padding: 2px 6px; font-size: 10px; }
 
-      #title-bar h1 {
-        font-size: 14px;
-      }
+      /* Legend — below title, small and subtle */
+      #legend { top: 52px; left: 8px; right: auto; font-size: 8px; gap: 6px; padding: 3px 8px; }
+      .legend-dot { width: 5px; height: 5px; }
+      .legend-item { gap: 3px; }
 
-      #title-bar p {
-        font-size: 11px;
-      }
+      /* Mode toggle — bottom right, clear of edges */
+      #mode-toggle { top: auto; bottom: 14px; right: 10px; z-index: 20; }
+      .mode-btn { padding: 6px 12px; font-size: 11px; }
 
-      #legend {
-        top: 38px;
-        left: 8px;
-        font-size: 9px;
-        gap: 6px;
-        padding: 4px 10px;
-      }
+      /* Hide desktop-only panels */
+      #info-panel { display: none; }
+      #controls-hint { display: none; }
 
-      .legend-dot {
-        width: 6px;
-        height: 6px;
-      }
-
-      #mode-toggle {
-        top: auto;
-        bottom: 12px;
-        right: 12px;
-        z-index: 20;
-      }
-
-      #info-panel {
-        display: none;
-      }
-
-      #controls-hint {
-        display: none;
-      }
-
-      #tooltip {
-        max-width: 280px;
-        font-size: 12px;
-        padding: 8px 12px;
-      }
-
-      #tooltip .tt-title {
-        font-size: 13px;
-      }
-
-      #tooltip .tt-tag {
-        font-size: 10px;
-        padding: 2px 6px;
-      }
+      /* Tooltip — fit screen */
+      #tooltip { max-width: 75vw; font-size: 11px; padding: 8px 10px; }
+      #tooltip .tt-title { font-size: 12px; }
+      #tooltip .tt-tag { font-size: 9px; padding: 2px 5px; }
     }
   </style>
 </head>
