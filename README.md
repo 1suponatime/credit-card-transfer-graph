@@ -1,33 +1,43 @@
-# Credit Card Transfer & Redemption Value Toolkit
+# 💳 信用卡转点二分图
 
-Interactive visualizations for US credit card points programs — transfer partners and redemption value analysis.
+> **在线体验 → [1suponatime.github.io/credit-card-transfer-graph](https://1suponatime.github.io/credit-card-transfer-graph/)**
 
-## Pages
+交互式可视化工具，展示美国主流信用卡积分向航空公司和酒店的转点关系。
 
-### 1. [Transfer Partners Graph](index.html)
-Interactive Three.js bipartite graph showing credit card → airline transfer relationships.
-- 6 card programs: Chase UR, Amex MR, Citi TYP, Capital One, Bilt, Marriott Bonvoy
-- 27 airlines grouped by alliance (Star Alliance, oneworld, SkyTeam, Independent)
-- Animated particle flow, hover highlighting, alliance filtering
-- Pan/zoom & click-to-lock
+## 📄 页面
 
-### 2. [Redemption Value Analysis](redemption-value.html)
-Chart.js dashboard comparing points redemption value (cents per point / CPP).
-- Min/Max/Average CPP for flights & hotels
-- Portal vs transfer partner value comparison
-- Per-card detail breakdowns
-- Airline miles value table with transfer sources
+| 页面 | 说明 |
+|------|------|
+| [转点二分图](https://1suponatime.github.io/credit-card-transfer-graph/) | Three.js 交互式二分图，支持航空/酒店切换、联盟筛选、拖拽缩放 |
+| [兑换价值分析](https://1suponatime.github.io/credit-card-transfer-graph/redemption-value.html) | Portal CPP 对比 + 目标选择器，找出最佳转点路径 |
+| [数据来源](https://1suponatime.github.io/credit-card-transfer-graph/references.html) | 所有转点比例、CPP 估值的引用出处 |
 
-## Data Sources
-- [US Credit Card Guide — Wings of the Points](https://uscreditcardguide.com/wings-of-the-points/) (2026.3)
-- [The Points Guy](https://thepointsguy.com) valuations
-- [NerdWallet](https://nerdwallet.com) & [FrequentMiler](https://frequentmiler.com) analysis
+## 🏦 覆盖积分计划
 
-## Tech Stack
-- Vanilla HTML/CSS/JS (no build step)
-- [Three.js](https://threejs.org/) for the transfer graph
-- [Chart.js](https://www.chartjs.org/) for redemption charts
-- [Inter](https://fonts.google.com/specimen/Inter) font via Google Fonts
+Chase UR · Amex MR · Citi TYP · Capital One · Bilt · Marriott Bonvoy
 
-## License
-Private repository — personal use only.
+## ✈️ 覆盖航司 & 🏨 酒店
+
+- **航空**: 27 家（Star Alliance / oneworld / SkyTeam / 独立航司）
+- **酒店**: 7 家（Hyatt / Hilton / IHG / Marriott / Wyndham / Choice / Accor）
+
+## 📱 特性
+
+- 手机触控适配（单指拖拽 + 双指缩放）
+- 深色主题，标签自动缩放
+- 点击联盟/酒店集团筛选高亮
+- 数据更新至 2026.3
+
+## 🚀 本地运行
+
+```bash
+python3 -m http.server 8080
+# 打开 http://localhost:8080
+```
+
+## 📚 数据来源
+
+- [US Credit Card Guide — 积分点数之翼](https://www.uscreditcardguide.com/wings-of-the-points/)
+- [The Points Guy — Monthly Valuations](https://thepointsguy.com/guide/monthly-valuations/)
+- [Frequent Miler — Reasonable Redemption Values](https://frequentmiler.com/reasonable-redemption-values/)
+- 各银行官方转点页面（详见[数据来源页](https://1suponatime.github.io/credit-card-transfer-graph/references.html)）
